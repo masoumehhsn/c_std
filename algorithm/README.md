@@ -6375,62 +6375,76 @@ Array elements: 10 20 30 40 50
 #include "algorithm/algorithm.h"
 #include "fmt/fmt.h"
 
-/* (1) Custom struct: walk a diagonal. */
-typedef struct { int x, y; } Point;
+
+typedef struct { 
+    int x, y; 
+} Point;
+
 static void inc_diag(void* p) {
     Point* pt = p;
     pt->x++;
     pt->y++;
 }
 
-/* (2) Custom step: bump by 5. */
-static void inc_by_5(void* p) { *(int*)p += 5; }
+static void inc_by_5(void* p) { 
+    *(int*)p += 5; 
+}
+
 
 int main(void) {
-    /* --- Built-in: 1000..1009 with the shipped incrementer --- */
     unsigned long arr_ulong[10];
     unsigned long start_ulong = 1000;
-    algorithm_iota(arr_ulong, arr_ulong + 10,
-                   &start_ulong, sizeof(unsigned long),
-                   algorithm_inc_ulong);
+
+    algorithm_iota(arr_ulong, arr_ulong + 10, &start_ulong, sizeof(unsigned long), algorithm_inc_ulong);
 
     fmt_printf("Unsigned long array:\n");
-    for (int i = 0; i < 10; ++i) fmt_printf("%lu\n", arr_ulong[i]);
+    for (int i = 0; i < 10; ++i) {
+        fmt_printf("%lu\n", arr_ulong[i]);
+    }
     fmt_printf("\n");
 
     /* --- Built-in: 'A'..'J' --- */
     unsigned char arr_char[10];
     unsigned char start_char = 'A';
-    algorithm_iota(arr_char, arr_char + 10,
-                   &start_char, sizeof(unsigned char),
-                   algorithm_inc_uchar);
+    algorithm_iota(arr_char, arr_char + 10, &start_char, sizeof(unsigned char), algorithm_inc_uchar);
+
     fmt_printf("Char array: ");
-    for (int i = 0; i < 10; ++i) fmt_printf("%c", arr_char[i]);
+    for (int i = 0; i < 10; ++i) {
+        fmt_printf("%c", arr_char[i]);
+    }
     fmt_printf("\n\n");
 
     /* --- Built-in: 1.5, 2.5, ..., 10.5 --- */
     float arr_float[10];
     float start_float = 1.5f;
-    algorithm_iota(arr_float, arr_float + 10,
-                   &start_float, sizeof(float),
-                   algorithm_inc_float);
+    algorithm_iota(arr_float, arr_float + 10, &start_float, sizeof(float), algorithm_inc_float);
+
     fmt_printf("Float array:\n");
-    for (int i = 0; i < 10; ++i) fmt_printf("%.1f\n", arr_float[i]);
+    for (int i = 0; i < 10; ++i) {
+        fmt_printf("%.1f\n", arr_float[i]);
+    }
     fmt_printf("\n");
 
     /* --- Custom struct (no library change needed) --- */
     Point pts[5];
     Point origin = { 0, 100 };
     algorithm_iota(pts, pts + 5, &origin, sizeof(Point), inc_diag);
+
     fmt_printf("Diagonal points: ");
-    for (int i = 0; i < 5; ++i) fmt_printf("(%d,%d) ", pts[i].x, pts[i].y);
+    for (int i = 0; i < 5; ++i) {
+        fmt_printf("(%d,%d) ", pts[i].x, pts[i].y);
+    }
     fmt_printf("\n\n");
 
     /* --- Custom step --- */
-    int by5[6]; int s = 100;
+    int by5[6]; 
+    int s = 100;
     algorithm_iota(by5, by5 + 6, &s, sizeof(int), inc_by_5);
+
     fmt_printf("Step-by-5: ");
-    for (int i = 0; i < 6; ++i) fmt_printf("%d ", by5[i]);
+    for (int i = 0; i < 6; ++i) {
+        fmt_printf("%d ", by5[i]);
+    }
     fmt_printf("\n");
 
     return 0;

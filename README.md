@@ -195,6 +195,7 @@ Every module lives in its own directory with a `.c` source, a `.h` header, and a
 | `statistics` | Mean, median, variance, … (mirrors Python's `statistics`). |
 | `random` | Pseudo-random numbers and sequence helpers (mirrors Python's `random`). |
 | `secrets` | Cryptographically secure random numbers/tokens and constant-time comparison. |
+| `uuid` | RFC 9562 Universally Unique Identifiers (v4/v7/v3/v5, Nil/Max), mirroring Python's `uuid`. |
 | `numbers` | Mathematical constants (header-only, like C++20 `<numbers>`). |
 | `matrix` | Matrix creation, manipulation and linear-algebra operations. |
 | `bigint` | Arbitrary-precision integers (backed by **GMP**). |

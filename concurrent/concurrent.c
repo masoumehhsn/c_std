@@ -1284,8 +1284,7 @@ int thread_sleep(const struct timespec *duration, struct timespec *remaining) {
 
     timespec_get(&start, TIME_UTC);
 
-    t = SleepEx((DWORD)(duration->tv_sec * 1000 +
-                duration->tv_nsec / 1000000 +
+    t = SleepEx((DWORD)(duration->tv_sec * 1000 + duration->tv_nsec / 1000000 +
                 (((duration->tv_nsec % 1000000) == 0) ? 0 : 1)),
                 true);
 
@@ -1372,18 +1371,22 @@ int thread_specific_create(ThreadSpecific *key, ThreadSpecificDestructor dtor) {
   CONCURRENT_LOG("[thread_specific_create]: enter (key=%p, dtor=%p)", (void*)key, (void*)(intptr_t)dtor);
   #if defined(_TTHREAD_WIN32_)
     *key = TlsAlloc();
+
     if (*key == TLS_OUT_OF_INDEXES) {
       CONCURRENT_LOG("[thread_specific_create]: TlsAlloc out of indexes -> THREAD_ERROR");
       return THREAD_ERROR;
     }
+
     _cthread_tss_dtors[*key] = dtor;
   #else
     if (pthread_key_create(key, dtor) != 0) {
       CONCURRENT_LOG("[thread_specific_create]: pthread_key_create failed -> THREAD_ERROR");
+
       return THREAD_ERROR;
     }
   #endif
     CONCURRENT_LOG("[thread_specific_create]: exit -> THREAD_SUCCESS");
+
     return THREAD_SUCCESS;
 }
 
@@ -1468,15 +1471,18 @@ void *thread_specific_get(ThreadSpecific key) {
   CONCURRENT_LOG("[thread_specific_get]: enter (key=%lu)", (unsigned long)key);
   #if defined(_TTHREAD_WIN32_)
     struct CThreadTSSData* data = (struct CThreadTSSData*)TlsGetValue(key);
+
     if (data == NULL) {
       CONCURRENT_LOG("[thread_specific_get]: no data -> NULL");
       return NULL;
     }
     CONCURRENT_LOG("[thread_specific_get]: exit -> %p", data->value);
+
     return data->value;
   #else
     void *v = pthread_getspecific(key);
     CONCURRENT_LOG("[thread_specific_get]: exit -> %p", v);
+
     return v;
   #endif
 }
@@ -1774,18 +1780,6 @@ void semaphore_destroy(Semaphore* sem) {
 }
 
 
-
-
-/* =================================================================== */
-/* Read-write lock (writer-preference)                                 */
-/*                                                                     */
-/* Implemented on top of the library's own Mutex + ThreadCondition so  */
-/* the behaviour is identical on Win32 and POSIX (Win32 SRWLOCK can't  */
-/* tell rwlock_unlock whether a read or write hold is being released). */
-/* Writer-preference: once a writer is waiting, new readers queue      */
-/* behind it, so a steady stream of readers cannot starve writers.     */
-/* =================================================================== */
-
 /**
  * @brief Initialise a read-write lock.
  *
@@ -1821,6 +1815,7 @@ int rwlock_init(RWLock* rw) {
     mutex_destroy(&rw->lock);
     return THREAD_ERROR;
   }
+
   return THREAD_SUCCESS;
 }
 
@@ -1842,11 +1837,14 @@ int rwlock_rdlock(RWLock* rw) {
   if (mutex_lock(&rw->lock) != THREAD_SUCCESS) {
     return THREAD_ERROR;
   }
+
   while (rw->active_writers > 0 || rw->waiting_writers > 0) {
     condition_wait(&rw->readers_ok, &rw->lock);
   }
+
   rw->active_readers++;
   mutex_unlock(&rw->lock);
+
   return THREAD_SUCCESS;
 }
 
@@ -1870,8 +1868,10 @@ int rwlock_tryrdlock(RWLock* rw) {
     mutex_unlock(&rw->lock);
     return THREAD_BUSY;
   }
+
   rw->active_readers++;
   mutex_unlock(&rw->lock);
+
   return THREAD_SUCCESS;
 }
 
@@ -1893,13 +1893,16 @@ int rwlock_wrlock(RWLock* rw) {
   if (mutex_lock(&rw->lock) != THREAD_SUCCESS) {
     return THREAD_ERROR;
   }
+
   rw->waiting_writers++;
   while (rw->active_readers > 0 || rw->active_writers > 0) {
     condition_wait(&rw->writers_ok, &rw->lock);
   }
+
   rw->waiting_writers--;
   rw->active_writers = 1;
   mutex_unlock(&rw->lock);
+
   return THREAD_SUCCESS;
 }
 
@@ -1923,8 +1926,10 @@ int rwlock_trywrlock(RWLock* rw) {
     mutex_unlock(&rw->lock);
     return THREAD_BUSY;
   }
+
   rw->active_writers = 1;
   mutex_unlock(&rw->lock);
+
   return THREAD_SUCCESS;
 }
 
@@ -1953,10 +1958,12 @@ int rwlock_unlock(RWLock* rw) {
     rw->active_writers = 0;
     if (rw->waiting_writers > 0) {
       condition_signal(&rw->writers_ok);     /* hand the lock to a waiting writer */
-    } else {
+    } 
+    else {
       condition_broadcast(&rw->readers_ok);  /* otherwise admit all waiting readers */
     }
-  } else if (rw->active_readers > 0) {
+  } 
+  else if (rw->active_readers > 0) {
     /* Releasing a read lock. */
     rw->active_readers--;
     if (rw->active_readers == 0 && rw->waiting_writers > 0) {
@@ -1982,6 +1989,7 @@ void rwlock_destroy(RWLock* rw) {
   if (!rw) {
     return;
   }
+
   condition_destroy(&rw->writers_ok);
   condition_destroy(&rw->readers_ok);
   mutex_destroy(&rw->lock);
